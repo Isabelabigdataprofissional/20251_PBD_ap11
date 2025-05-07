@@ -132,3 +132,53 @@ CALL sp_calcula_media(1, 2, 5, 6, 1, 8);
 CALL sp_calcula_media (ARRAY[1, 2]);
 
 
+-- Sprocedures implementação de um restaurante implementaremos o funcionamento básico de um restaurante 
+--Criação de tabelas
+
+--CLIENTES COD E NOME
+DROP TABLE tb_cliente;
+CREATE TABLE tb_cliente (cod_cliente SERIAL PRIMARY KEY,
+                         nome VARCHAR(200) NOT NULL
+                        );
+
+
+--PEDIDO COD  DTCRIACAO  DTMODIFICACAO  STATUS FK-COD_CLIENTE 
+DROP TABLE tb_pedido;
+CREATE TABLE IF NOT EXISTS tb_pedido(cod_pedido SERIAL PRIMARY KEY,
+                                     data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                     data_modificacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                     status VARCHAR DEFAULT 'aberto',
+                                     cod_cliente INT NOT NULL,
+                          CONSTRAINT fk_cliente FOREIGN KEY (cod_cliente) REFERENCES
+                                     tb_cliente(cod_cliente)
+);
+
+--DESCRIÇÃO DOS ITENS COD_TIPO DESCRICAO 
+DROP TABLE tb_tipo_item;
+CREATE TABLE tb_tipo_item(cod_tipo SERIAL PRIMARY KEY,
+                          descricao VARCHAR(200) NOT NULL );
+INSERT INTO tb_tipo_item (descricao) VALUES ('Bebida'), ('Comida');
+SELECT * FROM tb_tipo_item;
+
+
+-- ITENS COD   DESCRICAO   VALOR   FK-COD_TIPO
+DROP TABLE tb_item;
+CREATE TABLE IF NOT EXISTS tb_item(cod_item SERIAL PRIMARY KEY,
+                                   descricao VARCHAR(200) NOT NULL,
+                                   valor NUMERIC (10, 2) NOT NULL,
+                                   cod_tipo INT NOT NULL,
+                        CONSTRAINT fk_tipo_item FOREIGN KEY (cod_tipo) REFERENCES
+                                    tb_tipo_item(cod_tipo)
+);
+INSERT INTO tb_item (descricao, valor, cod_tipo) VALUES
+('Refrigerante', 7, 1), ('Suco', 8, 1), ('Hamburguer', 12, 2), ('Batata frita', 9, 2);
+SELECT * FROM tb_item;
+
+--PEDIDO COD  FK-COD_ITEM  FK-COD_PEDIDO
+DROP TABLE tb_item_pedido;
+CREATE TABLE IF NOT EXISTS tb_item_pedido(cod_item_pedido SERIAL PRIMARY KEY,
+                                          cod_item INT,
+                                          cod_pedido INT,
+                                CONSTRAINT fk_item FOREIGN KEY (cod_item) REFERENCES tb_item (cod_item),
+                                CONSTRAINT fk_pedido FOREIGN KEY (cod_pedido) REFERENCES tb_pedido (cod_pedido)
+);
