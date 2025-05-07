@@ -1,0 +1,134 @@
+-- Active: 1744049051852@@127.0.0.1@5432@postgres
+--OR REPLACE: opcional
+-- se o proc ainda não existir, ele será criado
+-- se já existir, será substituído
+CREATE OR REPLACE PROCEDURE sp_ola_procedures()
+LANGUAGE plpgsql
+AS $$
+BEGIN
+RAISE NOTICE 'Olá, procedures';
+END;
+$$;
+CALL sp_ola_procedures( );
+
+--Stored procedure: usando um parâmetro
+
+-- criando
+CREATE OR REPLACE PROCEDURE sp_ola_usuario (nome VARCHAR(200))
+LANGUAGE plpgsql
+AS $$
+BEGIN
+-- acessando parâmetro pelo nome
+RAISE NOTICE 'Olá, %', nome;
+-- assim também vale
+END;
+$$;
+--colocando em execução
+CALL sp_ola_usuario('Pedro');
+
+-- (Parâmetros e seus diferentes modos)
+--in entrada = valor na esntrada processa com um valor dado no inicio  
+-- out saida = valor na saida processa com valores dentro da função 
+-- inout = faz os dois 
+-----vc precisa especificar qual paramero é qual se nao vai serr sempre in 
+
+--maior valor entre dois parametros recebidos na entrada IN
+CREATE OR REPLACE PROCEDURE sp_acha_maior (IN valor1 INT, valor2 INT)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+IF valor1 > valor2 THEN
+RAISE NOTICE '% é o maior', $1;
+ELSE
+RAISE NOTICE '% é o maior', $2;
+END IF;
+END;
+$$
+
+-- colocando em execução
+CALL sp_acha_maior (2, 3);
+
+--OUT  
+CREATE OR REPLACE PROCEDURE sp_acha_maior (OUT resultado INT, IN valor1 INT, IN valor2 INT)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    CASE
+        WHEN valor1 > valor2 THEN
+            resultado := valor1;
+        ELSE
+            resultado := valor2;
+    END CASE;
+END;
+$$
+
+--colocando em execução
+DO $$
+DECLARE
+resultado INT;
+BEGIN
+CALL sp_acha_maior (resultado, 10, 12);
+RAISE NOTICE '% é o maior', resultado;
+END;
+$$
+
+--INOUT
+DROP PROCEDURE IF EXISTS sp_acha_maior;
+
+-- criando
+CREATE OR REPLACE PROCEDURE sp_acha_maior (INOUT valor1 INT, IN valor2 INT)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+IF valor2 > valor1 THEN
+valor1 := valor2;
+END IF;
+END;
+$$
+--entendendo o codigo 
+-- se o valor 3 for maior que o valor 1 entao  o valor 1 se tornar o numero que esta contido no valor 2 se nao vai imprimir o valor 1 de qualquer forma 
+
+-- colocando em execução
+DO
+$$
+DECLARE
+valor1 INT := 8;
+valor2 INT := 6;
+BEGIN
+CALL sp_acha_maior(valor1, valor2);
+RAISE NOTICE '% é o maior', valor1;
+END;
+$$
+
+--parâmetros VARIADIC   permite que especifique uma coleção de tamanho maior ou igual a 1
+
+CREATE OR REPLACE PROCEDURE sp_calcula_media ( VARIADIC valores INT [])
+LANGUAGE plpgsql
+AS $$
+DECLARE
+soma NUMERIC(10, 2) := 0;
+valor INT;
+BEGIN
+FOREACH valor IN ARRAY valores LOOP
+soma := soma + valor;
+END LOOP;
+--array_length calcula o número de elementos no array. O segundo parâmetro é o número de dimensões dele
+RAISE NOTICE 'A média é %', soma / array_length(valores, 1);
+END;
+$$
+-- entendendo o codigo 
+--soma começa como um numero com 10 casas amtes da virgula e 2 casas depois da virgula e é começa vazio com o 0
+--enquanto  vc for ver cada valor dentro dos valores ( aqui vc indica que é um ARRAY)  vc soma  e acaba o loop quando terminar os vaolores 
+-- --array_length calcula o número de elementos no array. O segundo parâmetro é o número de dimensões dele as dimiensoes podem ser as colunas
+-- vc indica a lista quando vc chama  sp (procedure)
+
+-- 1 parâmetro
+CALL sp_calcula_media(1);
+-- 2 parâmetros
+CALL sp_calcula_media(1, 2);
+-- 6 parâmetros
+CALL sp_calcula_media(1, 2, 5, 6, 1, 8);
+-- não funciona pq foi dito que a dimensao no  rray_length é 1 
+CALL sp_calcula_media (ARRAY[1, 2]);
+
+
