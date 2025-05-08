@@ -33,6 +33,7 @@ CALL sp_ola_usuario('Pedro');
 -----vc precisa especificar qual paramero é qual se nao vai serr sempre in 
 
 --maior valor entre dois parametros recebidos na entrada IN
+----------------------------------modo(IN) variavel(valor1) tipo(INT) 
 CREATE OR REPLACE PROCEDURE sp_acha_maior (IN valor1 INT, valor2 INT)
 LANGUAGE plpgsql
 AS $$
@@ -63,6 +64,7 @@ END;
 $$
 
 --colocando em execução
+-- vc precisa crir a variavel para o cliente ter aceso 
 DO $$
 DECLARE
 resultado INT;
@@ -182,3 +184,63 @@ CREATE TABLE IF NOT EXISTS tb_item_pedido(cod_item_pedido SERIAL PRIMARY KEY,
                                 CONSTRAINT fk_item FOREIGN KEY (cod_item) REFERENCES tb_item (cod_item),
                                 CONSTRAINT fk_pedido FOREIGN KEY (cod_pedido) REFERENCES tb_pedido (cod_pedido)
 );
+
+--procedures exemplos praticos para a lanchonete 
+
+--ccadastro de novos clientes 
+-- se um parâmetro com valor DEFAULT é especificado, aqueles que aparecem depois dele também deve ter valor DEFAULT
+-- por padrao, na maioria das vezes, o codigo nao sera dito na chamada para que crie de forma serial o cod_cliente na tb_cliente automaticamente quando inserir o nome 
+
+DROP PROCEDURE IF EXISTS sp_cadastrar_cliente;
+
+CREATE OR REPLACE PROCEDURE sp_cadastrar_cliente (IN nome VARCHAR(200), IN codigo INT DEFAULT NULL)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF codigo IS NULL THEN
+        INSERT INTO tb_cliente (nome) VALUES (nome);
+    ELSE
+        INSERT INTO tb_cliente (codigo, nome) VALUES (codigo, nome);
+    END IF;
+END;
+$$
+
+--cadastrando
+CALL sp_cadastrar_cliente ('João da Silva');
+CALL sp_cadastrar_cliente ('Maria Santos');
+SELECT * FROM tb_cliente;
+
+--=============================================================================================================
+--EXERCICIOS
+--=============================================================================================================
+
+ -- 1 Adicione/crie uma tabela de log ao sistema do restaurante. 
+ --Ajuste cada procedimento para que ele registre a data em que a operação aconteceu o nome do procedimento executado
+ DROP TABLE tb_log;
+
+ CREATE TABLE tb_log (cod_log SERIAL pRIMARY KEY,
+                     nome_log VARCHAR (200) NOT NULL,
+                     dt_log TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+
+DROP PROCEDURE IF EXISTS sp_cadastrar_cliente;
+
+CREATE OR REPLACE PROCEDURE sp_cadastrar_cliente ( IN nome VARCHAR(200), IN codigo INT DEFAULT NULL )
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF codigo IS NULL THEN
+        INSERT INTO tb_cliente (nome) VALUES (nome);
+    ELSE
+        INSERT INTO tb_cliente (codigo, nome) VALUES (codigo, nome);
+    END IF;
+    INSERT INTO tb_log (nome_log) VALUES ('cadastrar_cliente');
+END;
+$$
+
+CALL sp_cadastrar_cliente ('Amanda Oliveira');
+CALL sp_cadastrar_cliente ('Julia Perez');
+SELECT*FROM tb_log
+
+--=============================================================================================================
+
+-- 2 Adicione um procedimento ao sistema do restaurante. Ele deve receber um parâmetro de entrada (IN) que representa o código de um cliente  exibir, com RAISE NOTICE, o total de pedidos que o cliente tem
