@@ -108,11 +108,11 @@ CREATE OR REPLACE PROCEDURE sp_calcula_media ( VARIADIC valores INT [])
 LANGUAGE plpgsql
 AS $$
 DECLARE
-soma NUMERIC(10, 2) := 0;
-valor INT;
+    soma NUMERIC(10, 2) := 0;
+    valor INT;
 BEGIN
-FOREACH valor IN ARRAY valores LOOP
-soma := soma + valor;
+    FOREACH valor IN ARRAY valores LOOP
+    soma := soma + valor;
 END LOOP;
 --array_length calcula o número de elementos no array. O segundo parâmetro é o número de dimensões dele
 RAISE NOTICE 'A média é %', soma / array_length(valores, 1);
@@ -218,7 +218,7 @@ SELECT * FROM tb_cliente;
  --Ajuste cada procedimento para que ele registre a data em que a operação aconteceu o nome do procedimento executado
  DROP TABLE tb_log;
 
- CREATE TABLE tb_log (cod_log SERIAL pRIMARY KEY,
+ CREATE TABLE tb_log (cod_log SERIAL PRIMARY KEY,
                      nome_log VARCHAR (200) NOT NULL,
                      dt_log TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
 
@@ -243,4 +243,37 @@ SELECT*FROM tb_log
 
 --=============================================================================================================
 
--- 2 Adicione um procedimento ao sistema do restaurante. Ele deve receber um parâmetro de entrada (IN) que representa o código de um cliente  exibir, com RAISE NOTICE, o total de pedidos que o cliente tem
+-- 2 Adicione um procedimento ao sistema do restaurante. 
+--receber um parâmetro IN - código de cliente e exibir (RAISE NOTICE) o total de pedidos que o cliente tem
+
+--se fosse uma consulta seria assim:
+-- SELECT c.cod_cliente , COUNT (p.cod_pedido ) AS total_pedidos
+--     FROM tb_cliente c INNER JOIN tb_pedido p 
+--         ON ( c.cod_cliente = p.cod_cliente )
+--             GROUP BY c.cod_cliente;
+    --nao precisa do join pq ja tem cod_cliente na tabela pedido
+    
+CREATE OR REPLACE PROCEDURE sp_pedidos_do_cliente (IN cliente INT, OUT pedidos INT)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    SELECT COUNT(p.cod_pedido) INTO  pedidos 
+    FROM tb_pedido p
+    WHERE p.cod_cliente = cliente;
+    
+ INSERT INTO tb_log (nome_log) VALUES ('consulta_pedidos_de_cliente');
+ RAISE NOTICE 'TOTAL DE PEDIDOS DO CLIENTE % FOI DE %', cliente , pedidos;
+END;
+$$
+
+CALL sp_pedidos_do_cliente (1);
+
+
+
+
+
+
+
+
+
+
